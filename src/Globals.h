@@ -43,6 +43,10 @@
 	#define abstract
 
 	#define UNREACHABLE_INTRINSIC __builtin_unreachable()
+	
+	#ifndef M_PI
+		#define M_PI 3.14159265358979323846
+	#endif
 
 #else
 

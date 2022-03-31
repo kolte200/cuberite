@@ -143,7 +143,21 @@ void cChunk::BroadcastPendingChanges(void)
 		// Send block and block entity changes:
 		for (const auto ClientHandle : m_LoadedByClient)
 		{
-			ClientHandle->SendBlockChanges(m_PosX, m_PosZ, m_PendingSendBlocks);
+			sSetBlockVector changedBlocks(m_PendingSendBlocks.size());
+			//a_ChangedBlocks.reserve(m_PendingSendBlocks.size());
+
+			size_t i = 0;
+			for (const auto & Change : m_PendingSendBlocks)
+			{
+				changedBlocks[i++] = sSetBlock(
+					m_PosX, m_PosZ, Change.m_RelX, Change.m_RelY,
+					Change.m_RelZ,
+					GetBlock(Change.m_RelX, Change.m_RelY, Change.m_RelZ),
+					GetMeta(Change.m_RelX, Change.m_RelY, Change.m_RelZ)
+				);
+			}
+
+			ClientHandle->SendBlockChanges(m_PosX, m_PosZ, changedBlocks);
 
 			for (const auto BlockEntity : m_PendingSendBlockEntities)
 			{
@@ -154,6 +168,18 @@ void cChunk::BroadcastPendingChanges(void)
 
 	m_PendingSendBlocks.clear();
 	m_PendingSendBlockEntities.clear();
+
+	if (m_UpdateId == 0xFF)
+	{
+		m_UpdateId = 1;
+		// Clear all m_UpdateData because we don't want than an update that happen the
+		// last time when m_UpdateId = 1 to be ignored now because m_UpdateId = 1
+		m_UpdateData.Clear();
+	}
+	else
+	{
+		m_UpdateId++;
+	}
 }
 
 
@@ -1345,7 +1371,12 @@ void cChunk::FastSetBlock(int a_RelX, int a_RelY, int a_RelZ, BLOCKTYPE a_BlockT
 		)
 	)
 	{
-		m_PendingSendBlocks.emplace_back(m_PosX, m_PosZ, a_RelX, a_RelY, a_RelZ, a_BlockType, a_BlockMeta);
+		// Append block to send queue only if it was not already added since last broadcast
+		if (m_UpdateData.Get({a_RelX, a_RelY, a_RelZ}) != m_UpdateId)
+		{
+			m_UpdateData.Set({a_RelX, a_RelY, a_RelZ}, m_UpdateId);
+			m_PendingSendBlocks.push_back(sSetBlockCoord(m_PosX, m_PosZ, a_RelX, a_RelY, a_RelZ));
+		}
 	}
 
 	m_BlockData.SetMeta({ a_RelX, a_RelY, a_RelZ }, a_BlockMeta);
@@ -1392,7 +1423,7 @@ void cChunk::SendBlockTo(int a_RelX, int a_RelY, int a_RelZ, cClientHandle * a_C
 	if (a_Client == nullptr)
 	{
 		// Queue the block (entity) for all clients in the chunk (will be sent in BroadcastPendingBlockChanges()):
-		m_PendingSendBlocks.emplace_back(m_PosX, m_PosZ, a_RelX, a_RelY, a_RelZ, GetBlock(a_RelX, a_RelY, a_RelZ), GetMeta(a_RelX, a_RelY, a_RelZ));
+		m_PendingSendBlocks.emplace_back(sSetBlockCoord(m_PosX, m_PosZ, a_RelX, a_RelY, a_RelZ));
 		if (BlockEntity != nullptr)
 		{
 			m_PendingSendBlockEntities.push_back(BlockEntity);

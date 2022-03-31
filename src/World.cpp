@@ -3056,7 +3056,9 @@ cRedstoneSimulator * cWorld::InitializeRedstoneSimulator(cIniFile & a_IniFile)
 		res = new cIncrementalRedstoneSimulator(*this);
 	}
 
-	m_SimulatorManager->RegisterSimulator(res, 2 /* Two game ticks is a redstone tick */);
+	int rate = a_IniFile.GetValueI("Physics", "RedstoneSimulatorRate", 2);
+	int speed = a_IniFile.GetValueI("Physics", "RedstoneSimulatorSpeed", 1);
+	m_SimulatorManager->RegisterSimulator(res, rate, speed);
 
 	return res;
 }

@@ -292,7 +292,11 @@ public:
 	{
 		m_BlockData.SetMeta(a_RelPos, a_Meta);
 		MarkDirty();
-		m_PendingSendBlocks.emplace_back(m_PosX, m_PosZ, a_RelPos.x, a_RelPos.y, a_RelPos.z, GetBlock(a_RelPos), a_Meta);
+		if (m_UpdateData.Get({a_RelPos.x, a_RelPos.y, a_RelPos.z}) != m_UpdateId)
+		{
+			m_UpdateData.Set({a_RelPos.x, a_RelPos.y, a_RelPos.z}, m_UpdateId);
+			m_PendingSendBlocks.emplace_back(sSetBlockCoord(m_PosX, m_PosZ, a_RelPos.x, a_RelPos.y, a_RelPos.z));
+		}
 	}
 
 	/** Light alterations based on time */
@@ -484,7 +488,7 @@ private:
 	/** Blocks that have changed and need to be sent to all clients.
 	The protocol has a provision for coalescing block changes, and this is the buffer.
 	It will collect the block changes that occur in a tick, before being flushed in BroadcastPendingSendBlocks. */
-	sSetBlockVector m_PendingSendBlocks;
+	sSetBlockCoordVector m_PendingSendBlocks;
 
 	/** Block entities that have been touched and need to be sent to all clients.
 	Because block changes are buffered and we need to happen after them, this buffer exists too.
@@ -509,6 +513,14 @@ private:
 
 	ChunkBlockData m_BlockData;
 	ChunkLightData m_LightData;
+
+	// Block that have already changed since last call to BroadcastPendingChanges()
+	typedef ChunkDataStore<unsigned char, ChunkBlockData::SectionBlockCount, 0> ChunkUpdateData;
+	ChunkUpdateData m_UpdateData;
+
+	// The number to write in m_UpdateData if an update occure on a block
+	// m_UpdateId incress by 1 every call to BroadcastPendingChanges()
+	unsigned char m_UpdateId;
 
 	cChunkDef::HeightMap m_HeightMap;
 	cChunkDef::BiomeMap  m_BiomeMap;

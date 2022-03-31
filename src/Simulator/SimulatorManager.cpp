@@ -32,9 +32,10 @@ void cSimulatorManager::Simulate(float a_Dt)
 	m_Ticks++;
 	for (cSimulators::iterator itr = m_Simulators.begin(); itr != m_Simulators.end(); ++itr)
 	{
-		if ((m_Ticks % itr->second) == 0)
+		if ((m_Ticks % itr->rate) == 0)
 		{
-			itr->first->Simulate(a_Dt);
+			for (int i = itr->multiplier; i--;)
+				itr->simulator->Simulate(a_Dt);
 		}
 	}
 }
@@ -48,9 +49,10 @@ void cSimulatorManager::SimulateChunk(std::chrono::milliseconds a_Dt, int a_Chun
 	// m_Ticks has already been increased in Simulate()
 	for (cSimulators::iterator itr = m_Simulators.begin(); itr != m_Simulators.end(); ++itr)
 	{
-		if ((m_Ticks % itr->second) == 0)
+		if ((m_Ticks % itr->rate) == 0)
 		{
-			itr->first->SimulateChunk(a_Dt, a_ChunkX, a_ChunkZ, a_Chunk);
+			for (int i = itr->multiplier; i--;)
+				itr->simulator->SimulateChunk(a_Dt, a_ChunkX, a_ChunkZ, a_Chunk);
 		}
 	}
 }
@@ -65,7 +67,7 @@ void cSimulatorManager::WakeUp(cChunk & a_Chunk, Vector3i a_Position)
 
 	for (const auto & Item : m_Simulators)
 	{
-		Item.first->WakeUp(a_Chunk, a_Position, a_Chunk.GetBlock(a_Position));
+		Item.simulator->WakeUp(a_Chunk, a_Position, a_Chunk.GetBlock(a_Position));
 	}
 
 	for (const auto & Offset : cSimulator::AdjacentOffsets)
@@ -88,7 +90,7 @@ void cSimulatorManager::WakeUp(cChunk & a_Chunk, Vector3i a_Position)
 
 		for (const auto & Item : m_Simulators)
 		{
-			Item.first->WakeUp(*Chunk, Relative, Offset, Block);
+			Item.simulator->WakeUp(*Chunk, Relative, Offset, Block);
 		}
 	}
 }
@@ -101,7 +103,7 @@ void cSimulatorManager::WakeUp(const cCuboid & a_Area)
 {
 	for (const auto & Item : m_Simulators)
 	{
-		Item.first->WakeUp(a_Area);
+		Item.simulator->WakeUp(a_Area);
 	}
 }
 
@@ -111,5 +113,11 @@ void cSimulatorManager::WakeUp(const cCuboid & a_Area)
 
 void cSimulatorManager::RegisterSimulator(cSimulator * a_Simulator, int a_Rate)
 {
-	m_Simulators.push_back(std::make_pair(a_Simulator, a_Rate));
+	RegisterSimulator(a_Simulator, a_Rate, 1);
+}
+
+
+void cSimulatorManager::RegisterSimulator(cSimulator * a_Simulator, int a_Rate, int a_Multiplier)
+{
+	m_Simulators.push_back({a_Simulator, a_Rate, a_Multiplier});
 }

@@ -11,6 +11,7 @@
 
 #ifdef _WIN32
 
+
 class StartAsService
 {
 public:
@@ -19,13 +20,13 @@ public:
 	template <auto UniversalMain>
 	static bool MakeIntoService()
 	{
-		SERVICE_TABLE_ENTRY ServiceTable[] =
+		SERVICE_TABLE_ENTRYW ServiceTable[] =
 		{
-			{ g_ServiceName, (LPSERVICE_MAIN_FUNCTION)serviceMain<UniversalMain> },
+			{ g_ServiceName, (LPSERVICE_MAIN_FUNCTIONW)serviceMain<UniversalMain> },
 			{ nullptr, nullptr }
 		};
 
-		if (StartServiceCtrlDispatcher(ServiceTable) == FALSE)
+		if (StartServiceCtrlDispatcherW(ServiceTable) == FALSE)
 		{
 			throw std::system_error(GetLastError(), std::system_category());
 		}
@@ -65,13 +66,13 @@ private:
 
 	/* Startup logic for running as a service */
 	template <auto MainFunction>
-	static void WINAPI serviceMain(DWORD argc, TCHAR *argv[])
+	static void WINAPI serviceMain(DWORD argc, wchar_t *argv[])
 	{
 		wchar_t applicationFilename[MAX_PATH];
 		wchar_t applicationDirectory[MAX_PATH];
 
 		// Get this binary's file path:
-		if (GetModuleFileName(nullptr, applicationFilename, std::size(applicationFilename)) == 0)
+		if (GetModuleFileNameW(nullptr, applicationFilename, std::size(applicationFilename)) == 0)
 		{
 			serviceSetState(0, SERVICE_STOPPED, GetLastError());
 			return;
@@ -92,14 +93,14 @@ private:
 
 		// Services are run by the SCM, and inherit its working directory - usually System32.
 		// Set the working directory to the same location as the binary.
-		if (SetCurrentDirectory(applicationDirectory) == FALSE)
+		if (SetCurrentDirectoryW(applicationDirectory) == FALSE)
 		{
 			serviceSetState(0, SERVICE_STOPPED, GetLastError());
 			return;
 		}
 
 
-		g_StatusHandle = RegisterServiceCtrlHandler(g_ServiceName, serviceCtrlHandler);
+		g_StatusHandle = RegisterServiceCtrlHandlerW(g_ServiceName, serviceCtrlHandler);
 		if (g_StatusHandle == nullptr)
 		{
 			OutputDebugStringA("RegisterServiceCtrlHandler() failed\n");
@@ -113,6 +114,8 @@ private:
 		char * MultibyteArgV[] = { MultibyteArgV0 };
 
 		const auto OutputSize = std::size(MultibyteArgV0);
+		//const size_t TranslateResult = strlen(argv[0]);
+		//strcpy(MultibyteArgV0, argv[0]);
 		const auto TranslateResult = std::wcstombs(MultibyteArgV0, argv[0], OutputSize);
 
 		if (TranslateResult == static_cast<size_t>(-1))

@@ -49,10 +49,20 @@ public:
 	void WakeUp(const cCuboid & a_Area);
 
 	void RegisterSimulator(cSimulator * a_Simulator, int a_Rate);  // Takes ownership of the simulator object!
+	
+	// a_Multiplier is the number of time the simulator must be call every a_Rate tick(s)
+	void RegisterSimulator(cSimulator * a_Simulator, int a_Rate, int a_Multiplier);
 
 protected:
 
-	typedef std::vector <std::pair<cSimulator *, int> > cSimulators;
+	typedef struct
+	{
+		cSimulator * simulator;
+		int rate;
+		int multiplier;
+	} cSimulatorEntry;
+
+	typedef std::vector<cSimulatorEntry> cSimulators;
 
 	cWorld & m_World;
 	cSimulators m_Simulators;

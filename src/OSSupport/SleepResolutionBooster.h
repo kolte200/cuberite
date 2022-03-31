@@ -9,7 +9,7 @@
 
 
 
-#ifdef _WIN32
+#if defined(_WIN32) && __has_include(<timeapi.h>)
 
 #include <timeapi.h>
 

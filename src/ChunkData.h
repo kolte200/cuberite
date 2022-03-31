@@ -44,6 +44,9 @@ struct ChunkDataStore
 	Allocates sections that are needed for the operation. */
 	void SetAll(const ElementType (& a_Source)[cChunkDef::NumSections * ElementCount]);
 
+	/** Fill every section with DefaultValue */
+	void Clear();
+
 	/** Contains all the sections this ChunkDataStore manages. */
 	std::unique_ptr<Type> Store[cChunkDef::NumSections];
 };

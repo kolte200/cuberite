@@ -509,7 +509,7 @@ private:
 			return FALSE;
 		}
 
-		hMods = (HMODULE*)malloc(sizeof(HMODULE) * (TTBUFLEN / sizeof HMODULE));
+		hMods = (HMODULE*)malloc(sizeof(HMODULE) * (TTBUFLEN / sizeof(HMODULE)));
 		tt = (char*)malloc(sizeof(char) * TTBUFLEN);
 		tt2 = (char*)malloc(sizeof(char) * TTBUFLEN);
 		if ((hMods == nullptr) || (tt == nullptr) || (tt2 == nullptr))
@@ -527,10 +527,10 @@ private:
 			goto cleanup;
 		}
 
-		for (i = 0; i < cbNeeded / sizeof hMods[0]; i++)
+		for (i = 0; i < cbNeeded / sizeof(hMods[0]); i++)
 		{
 			// base address, size
-			pGMI(hProcess, hMods[i], &mi, sizeof mi);
+			pGMI(hProcess, hMods[i], &mi, sizeof(mi));
 			// image file name
 			tt[0] = 0;
 			pGMFNE(hProcess, hMods[i], tt, TTBUFLEN);

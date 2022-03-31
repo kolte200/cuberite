@@ -14,6 +14,11 @@
 #include "StringCompression.h"
 
 
+#ifndef _MSC_VER
+    #define localtime_r(T,Tm) (localtime_s(Tm,T) ? NULL : Tm)
+#endif
+
+
 
 
 

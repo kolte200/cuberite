@@ -135,6 +135,19 @@ void ChunkDataStore<ElementType, ElementCount, DefaultValue>::Set(const Vector3i
 
 
 
+template <class ElementType, size_t ElementCount, ElementType DefaultValue>
+void ChunkDataStore<ElementType, ElementCount, DefaultValue>::Clear()
+{
+	for (int i = 0; i < cChunkDef::NumSections; i++)
+	{
+		Store[i].reset();
+	}
+}
+
+
+
+
+
 template<class ElementType, size_t ElementCount, ElementType DefaultValue>
 void ChunkDataStore<ElementType, ElementCount, DefaultValue>::SetSection(const ElementType (& a_Source)[ElementCount], const size_t a_Y)
 {

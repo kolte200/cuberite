@@ -366,12 +366,55 @@ public:
 
 
 
+struct sSetBlockCoord
+{
+	int m_RelX, m_RelY, m_RelZ;
+	int m_ChunkX, m_ChunkZ;
+
+	sSetBlockCoord(int a_BlockX, int a_BlockY, int a_BlockZ) :
+		m_RelX(a_BlockX),
+		m_RelY(a_BlockY),
+		m_RelZ(a_BlockZ)
+	{
+		cChunkDef::AbsoluteToRelative(
+			m_RelX, m_RelY, m_RelZ, m_ChunkX, m_ChunkZ);
+	}
+
+	sSetBlockCoord(
+		int a_ChunkX, int a_ChunkZ, int a_RelX, int a_RelY, int a_RelZ) :
+		m_RelX(a_RelX),
+		m_RelY(a_RelY),
+		m_RelZ(a_RelZ),
+		m_ChunkX(a_ChunkX),
+		m_ChunkZ(a_ChunkZ)
+	{
+		ASSERT((a_RelX >= 0) && (a_RelX < cChunkDef::Width));
+		ASSERT((a_RelZ >= 0) && (a_RelZ < cChunkDef::Width));
+	}
+
+	/** Returns the absolute X coord of the stored block. */
+	int GetX(void) const { return m_RelX + cChunkDef::Width * m_ChunkX; }
+
+	/** Returns the absolute Y coord of the stored block.
+	Is the same as relative Y coords, because there's no Y relativization. */
+	int GetY(void) const { return m_RelY; }
+
+	/** Returns the absolute Z coord of the stored block. */
+	int GetZ(void) const { return m_RelZ + cChunkDef::Width * m_ChunkZ; }
+};
+
+
+
+
+
 struct sSetBlock
 {
 	int m_RelX, m_RelY, m_RelZ;
 	int m_ChunkX, m_ChunkZ;
 	BLOCKTYPE m_BlockType;
 	NIBBLETYPE m_BlockMeta;
+
+	sSetBlock() {}
 
 	sSetBlock(int a_BlockX, int a_BlockY, int a_BlockZ, BLOCKTYPE a_BlockType, NIBBLETYPE a_BlockMeta):
 		m_RelX(a_BlockX),
@@ -422,6 +465,7 @@ struct sSetBlock
 };
 
 typedef std::vector<sSetBlock> sSetBlockVector;
+typedef std::vector<sSetBlockCoord> sSetBlockCoordVector;
 
 typedef std::list<cChunkCoords> cChunkCoordsList;
 typedef std::vector<cChunkCoords> cChunkCoordsVector;
